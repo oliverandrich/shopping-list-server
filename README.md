@@ -73,4 +73,4 @@ go build -o shopping-list-server
 
 ## License
 
-MIT
+EUPL-1.2

@@ -1,3 +1,6 @@
+// Licensed under the EUPL-1.2-or-later
+// Copyright (C) 2025 Oliver Andrich
+
 package auth
 
 import (
