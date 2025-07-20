@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -92,17 +93,60 @@ func (s *Service) VerifyMagicLink(email, code string) (*models.User, error) {
 	var user models.User
 	result = s.DB.Where("email = ?", email).First(&user)
 	if result.Error != nil {
-		// Create new user
-		user = models.User{
-			ID:    uuid.New().String(),
-			Email: email,
-		}
-		if err := s.DB.Create(&user).Error; err != nil {
-			return nil, err
-		}
+		return nil, errors.New("user not found - invitation required for new users")
 	}
 
 	return &user, nil
+}
+
+func (s *Service) VerifyMagicLinkWithInvitation(email, code string) (*models.User, *models.Invitation, error) {
+	var magicLink models.MagicLink
+	result := s.DB.Where("code = ? AND email = ? AND used = false AND expires_at > ?",
+		code, email, time.Now()).First(&magicLink)
+
+	if result.Error != nil {
+		return nil, nil, result.Error
+	}
+
+	// Mark code as used
+	magicLink.Used = true
+	s.DB.Save(&magicLink)
+
+	// Find existing user
+	var user models.User
+	result = s.DB.Where("email = ?", email).First(&user)
+	if result.Error == nil {
+		// User exists, check for pending list invitation
+		var invitation models.Invitation
+		err := s.DB.Where("email = ? AND used = false AND expires_at > ? AND type = ?",
+			email, time.Now(), "list").First(&invitation).Error
+		if err == nil {
+			return &user, &invitation, nil
+		}
+		return &user, nil, nil
+	}
+
+	// User doesn't exist, check for invitation
+	var invitation models.Invitation
+	err := s.DB.Where("email = ? AND used = false AND expires_at > ?",
+		email, time.Now()).First(&invitation).Error
+	if err != nil {
+		return nil, nil, errors.New("invitation required for new users")
+	}
+
+	// Create new user
+	user = models.User{
+		ID:        uuid.New().String(),
+		Email:     email,
+		InvitedBy: &invitation.InvitedBy,
+		JoinedAt:  time.Now(),
+		CreatedAt: time.Now(),
+	}
+	if err := s.DB.Create(&user).Error; err != nil {
+		return nil, nil, err
+	}
+
+	return &user, &invitation, nil
 }
 
 func (s *Service) GenerateJWT(user *models.User) (string, error) {

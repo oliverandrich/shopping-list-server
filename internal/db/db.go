@@ -13,7 +13,15 @@ func Init(dbPath string) (*gorm.DB, error) {
 	}
 
 	// Auto-migrate the schema
-	err = db.AutoMigrate(&models.User{}, &models.MagicLink{}, &models.ShoppingItem{})
+	err = db.AutoMigrate(
+		&models.SystemSettings{},
+		&models.User{},
+		&models.ShoppingList{},
+		&models.ListMember{},
+		&models.Invitation{},
+		&models.MagicLink{},
+		&models.ShoppingItem{},
+	)
 	if err != nil {
 		return nil, err
 	}
