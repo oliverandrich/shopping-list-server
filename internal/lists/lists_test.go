@@ -150,9 +150,10 @@ func TestService_GetUserLists(t *testing.T) {
 		// Verify list IDs are correct
 		foundList1, foundList2 := false, false
 		for _, list := range lists {
-			if list.ID == list1.ID {
+			switch list.ID {
+			case list1.ID:
 				foundList1 = true
-			} else if list.ID == list2.ID {
+			case list2.ID:
 				foundList2 = true
 			}
 		}
@@ -607,9 +608,10 @@ func TestService_GetListMembers(t *testing.T) {
 		// Verify both users are in the list
 		foundOwner, foundMember := false, false
 		for _, m := range members {
-			if m.ID == owner.ID {
+			switch m.ID {
+			case owner.ID:
 				foundOwner = true
-			} else if m.ID == member.ID {
+			case member.ID:
 				foundMember = true
 			}
 		}

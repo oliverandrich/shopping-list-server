@@ -25,23 +25,23 @@ func TestLoad(t *testing.T) {
 	defer func() {
 		for key, value := range originalEnv {
 			if value == "" {
-				os.Unsetenv(key)
+				_ = os.Unsetenv(key)
 			} else {
-				os.Setenv(key, value)
+				_ = os.Setenv(key, value)
 			}
 		}
 	}()
 
 	t.Run("with environment variables", func(t *testing.T) {
 		// Set test environment variables
-		os.Setenv("SMTP_HOST", "test.smtp.com")
-		os.Setenv("SMTP_PORT", "2525")
-		os.Setenv("SMTP_USER", "testuser")
-		os.Setenv("SMTP_PASS", "testpass")
-		os.Setenv("SMTP_FROM", "test@example.com")
-		os.Setenv("JWT_SECRET", "test-secret")
-		os.Setenv("PORT", ":8080")
-		os.Setenv("DB_PATH", "test.db")
+		_ = os.Setenv("SMTP_HOST", "test.smtp.com")
+		_ = os.Setenv("SMTP_PORT", "2525")
+		_ = os.Setenv("SMTP_USER", "testuser")
+		_ = os.Setenv("SMTP_PASS", "testpass")
+		_ = os.Setenv("SMTP_FROM", "test@example.com")
+		_ = os.Setenv("JWT_SECRET", "test-secret")
+		_ = os.Setenv("PORT", ":8080")
+		_ = os.Setenv("DB_PATH", "test.db")
 
 		cfg := Load()
 
@@ -74,7 +74,7 @@ func TestLoad(t *testing.T) {
 	t.Run("with default values", func(t *testing.T) {
 		// Clear environment variables
 		for key := range originalEnv {
-			os.Unsetenv(key)
+			_ = os.Unsetenv(key)
 		}
 
 		cfg := Load()
@@ -97,7 +97,7 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("with invalid SMTP_PORT", func(t *testing.T) {
-		os.Setenv("SMTP_PORT", "invalid")
+		_ = os.Setenv("SMTP_PORT", "invalid")
 
 		cfg := Load()
 
@@ -135,10 +135,10 @@ func TestGetEnvOrDefault(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Clean up
-			defer os.Unsetenv(tt.key)
+			defer func() { _ = os.Unsetenv(tt.key) }()
 
 			if tt.envValue != "" {
-				os.Setenv(tt.key, tt.envValue)
+				_ = os.Setenv(tt.key, tt.envValue)
 			}
 
 			result := getEnvOrDefault(tt.key, tt.defaultValue)
@@ -183,10 +183,10 @@ func TestGetEnvAsIntOrDefault(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Clean up
-			defer os.Unsetenv(tt.key)
+			defer func() { _ = os.Unsetenv(tt.key) }()
 
 			if tt.envValue != "" {
-				os.Setenv(tt.key, tt.envValue)
+				_ = os.Setenv(tt.key, tt.envValue)
 			}
 
 			result := getEnvAsIntOrDefault(tt.key, tt.defaultValue)
@@ -228,7 +228,7 @@ func TestConfigStruct(t *testing.T) {
 
 func TestJWTSecretGeneration(t *testing.T) {
 	// Test that JWT secret is generated when not provided
-	os.Unsetenv("JWT_SECRET")
+	_ = os.Unsetenv("JWT_SECRET")
 
 	cfg1 := Load()
 	cfg2 := Load()
@@ -271,10 +271,10 @@ func TestPortFormatting(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			defer os.Unsetenv("PORT")
+			defer func() { _ = os.Unsetenv("PORT") }()
 
 			if tt.envValue != "" {
-				os.Setenv("PORT", tt.envValue)
+				_ = os.Setenv("PORT", tt.envValue)
 			}
 
 			cfg := Load()

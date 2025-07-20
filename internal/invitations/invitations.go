@@ -31,7 +31,10 @@ func NewService(db *gorm.DB, mailer *gomail.Dialer) *Service {
 
 func GenerateInvitationCode() string {
 	bytes := make([]byte, 4)
-	rand.Read(bytes)
+	if _, err := rand.Read(bytes); err != nil {
+		// Fallback to time-based random if crypto/rand fails
+		return fmt.Sprintf("%X", time.Now().UnixNano())[:8]
+	}
 	return fmt.Sprintf("%X", bytes)
 }
 

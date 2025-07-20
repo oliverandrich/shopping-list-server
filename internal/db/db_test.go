@@ -79,7 +79,7 @@ func TestInit_RelativePath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get current directory: %v", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	// Change to temp directory
 	err = os.Chdir(tempDir)

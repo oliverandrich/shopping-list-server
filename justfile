@@ -39,6 +39,15 @@ fmt:
 vet:
     go vet ./...
 
+# Run golangci-lint
+lint:
+    @if command -v golangci-lint >/dev/null 2>&1; then \
+        golangci-lint run; \
+    else \
+        echo "golangci-lint not installed. Install with: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"; \
+        echo "Or visit: https://golangci-lint.run/usage/install/"; \
+    fi
+
 # Run tests (when they exist)
 test:
     go test ./...
@@ -64,8 +73,8 @@ clean:
     rm -f coverage.out coverage.html
     go clean
 
-# Check code quality (format, vet, build)
-check: fmt vet build
+# Check code quality (format, vet, lint, build)
+check: fmt vet lint build
     @echo "✅ Code quality checks passed"
 
 # Full maintenance: deps, check, test with coverage
@@ -85,12 +94,19 @@ info:
     @echo "Available commands:"
     @just --list
 
-# Security audit of dependencies
+# Security audit of dependencies and code
 audit:
     @if command -v govulncheck >/dev/null 2>&1; then \
         govulncheck ./...; \
     else \
         echo "govulncheck not installed. Install with: go install golang.org/x/vuln/cmd/govulncheck@latest"; \
+    fi
+    @echo ""
+    @echo "Running security-focused linting..."
+    @if command -v golangci-lint >/dev/null 2>&1; then \
+        golangci-lint run --enable=gosec,gocritic,revive; \
+    else \
+        echo "golangci-lint not installed. Security linting skipped."; \
     fi
 
 # Update dependencies to latest versions

@@ -10,8 +10,8 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	// Clean up any test artifacts
-	os.Remove("test.db")
-	os.Remove("")
+	_ = os.Remove("test.db")
+	_ = os.Remove("")
 
 	os.Exit(code)
 }

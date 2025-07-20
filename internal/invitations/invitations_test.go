@@ -41,7 +41,7 @@ func TestGenerateInvitationCode(t *testing.T) {
 
 	// Check that code contains only hex characters (0-9, A-F)
 	for _, char := range code {
-		if !((char >= '0' && char <= '9') || (char >= 'A' && char <= 'F')) {
+		if (char < '0' || char > '9') && (char < 'A' || char > 'F') {
 			t.Errorf("Expected code to contain only hex characters, found '%c'", char)
 		}
 	}
@@ -353,9 +353,10 @@ func TestService_GetUserInvitations(t *testing.T) {
 		// Verify invitation IDs
 		foundInv1, foundInv2 := false, false
 		for _, inv := range invitations {
-			if inv.ID == inv1.ID {
+			switch inv.ID {
+			case inv1.ID:
 				foundInv1 = true
-			} else if inv.ID == inv2.ID {
+			case inv2.ID:
 				foundInv2 = true
 			}
 		}

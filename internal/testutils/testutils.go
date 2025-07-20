@@ -29,15 +29,15 @@ func SetupTestConfig(t *testing.T) *config.Config {
 	t.Helper()
 
 	// Set test environment variables
-	os.Setenv("GO_ENV", "test")
-	os.Setenv("SMTP_HOST", "test.smtp.com")
-	os.Setenv("SMTP_PORT", "587")
-	os.Setenv("SMTP_USER", "test@example.com")
-	os.Setenv("SMTP_PASS", "testpass")
-	os.Setenv("SMTP_FROM", "test@example.com")
-	os.Setenv("JWT_SECRET", "test-secret-key-for-testing-only")
-	os.Setenv("PORT", ":8080")
-	os.Setenv("DB_PATH", ":memory:")
+	_ = os.Setenv("GO_ENV", "test")
+	_ = os.Setenv("SMTP_HOST", "test.smtp.com")
+	_ = os.Setenv("SMTP_PORT", "587")
+	_ = os.Setenv("SMTP_USER", "test@example.com")
+	_ = os.Setenv("SMTP_PASS", "testpass")
+	_ = os.Setenv("SMTP_FROM", "test@example.com")
+	_ = os.Setenv("JWT_SECRET", "test-secret-key-for-testing-only")
+	_ = os.Setenv("PORT", ":8080")
+	_ = os.Setenv("DB_PATH", ":memory:")
 
 	return config.Load()
 }
@@ -52,7 +52,7 @@ func CleanupTestEnv(t *testing.T) {
 	}
 
 	for _, envVar := range envVars {
-		os.Unsetenv(envVar)
+		_ = os.Unsetenv(envVar)
 	}
 }
 
