@@ -1,6 +1,8 @@
 // Licensed under the EUPL-1.2-or-later
 // Copyright (C) 2025 Oliver Andrich
 
+// Package setup provides system initialization services including admin user creation,
+// database migration, and first-time setup for the shopping list application.
 package setup
 
 import (
@@ -12,14 +14,17 @@ import (
 	"gorm.io/gorm"
 )
 
+// Service provides system initialization and migration services.
 type Service struct {
 	DB *gorm.DB
 }
 
+// NewService creates a new setup service with database access.
 func NewService(db *gorm.DB) *Service {
 	return &Service{DB: db}
 }
 
+// IsSystemSetup checks if the system has been initialized with an admin user.
 func (s *Service) IsSystemSetup() (bool, error) {
 	var settings models.SystemSettings
 	err := s.DB.First(&settings).Error
@@ -32,6 +37,7 @@ func (s *Service) IsSystemSetup() (bool, error) {
 	return settings.IsSetup, nil
 }
 
+// SetupSystem initializes the system with an admin user and default settings.
 func (s *Service) SetupSystem(email string) (*models.User, error) {
 	// Check if system is already setup
 	isSetup, err := s.IsSystemSetup()
@@ -95,6 +101,7 @@ func (s *Service) SetupSystem(email string) (*models.User, error) {
 	return &user, nil
 }
 
+// MigrateExistingData performs data migration for existing installations.
 func (s *Service) MigrateExistingData() error {
 	// Check if we have existing users without the system being setup
 	var userCount int64

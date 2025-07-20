@@ -1,6 +1,7 @@
 // Licensed under the EUPL-1.2-or-later
 // Copyright (C) 2025 Oliver Andrich
 
+// Package main provides the shopping list server application with CLI commands for setup and server operation.
 package main
 
 import (

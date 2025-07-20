@@ -1,6 +1,8 @@
 // Licensed under the EUPL-1.2-or-later
 // Copyright (C) 2025 Oliver Andrich
 
+// Package config provides environment variable loading and configuration management
+// for the shopping list server application.
 package config
 
 import (
@@ -8,6 +10,7 @@ import (
 	"strconv"
 )
 
+// Config holds all configuration values loaded from environment variables.
 type Config struct {
 	SMTPHost   string
 	SMTPPort   int
@@ -19,6 +22,7 @@ type Config struct {
 	DBPath     string
 }
 
+// Load reads configuration from environment variables and returns a Config instance.
 func Load() *Config {
 	cfg := &Config{
 		SMTPHost:   getEnvOrDefault("SMTP_HOST", "smtp.gmail.com"),

@@ -1,6 +1,7 @@
 // Licensed under the EUPL-1.2-or-later
 // Copyright (C) 2025 Oliver Andrich
 
+// Package validation provides request validation utilities and error formatting.
 package validation
 
 import (

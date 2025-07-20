@@ -1,6 +1,8 @@
 // Licensed under the EUPL-1.2-or-later
 // Copyright (C) 2025 Oliver Andrich
 
+// Package handlers provides HTTP request handlers for all API endpoints including authentication,
+// shopping list management, invitations, and user operations.
 package handlers
 
 import (
@@ -15,6 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Server provides HTTP handlers for the shopping list API with authentication and business logic services.
 type Server struct {
 	DB          *gorm.DB
 	Auth        *auth.Service
@@ -22,6 +25,7 @@ type Server struct {
 	Invitations *invitations.Service
 }
 
+// NewServer creates a new HTTP server with all required services initialized.
 func NewServer(db *gorm.DB, jwtSecret []byte, mailer *gomail.Dialer) *Server {
 	return &Server{
 		DB:          db,
@@ -39,7 +43,7 @@ func (s *Server) Health(c *fiber.Ctx) error {
 	})
 }
 
-// Auth Handlers
+// RequestLogin handles magic link authentication requests.
 func (s *Server) RequestLogin(c *fiber.Ctx) error {
 	var req models.LoginRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -73,6 +77,7 @@ func (s *Server) RequestLogin(c *fiber.Ctx) error {
 	})
 }
 
+// VerifyLogin handles magic link verification and returns JWT tokens.
 func (s *Server) VerifyLogin(c *fiber.Ctx) error {
 	var req models.VerifyRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -138,7 +143,7 @@ func (s *Server) VerifyLogin(c *fiber.Ctx) error {
 	})
 }
 
-// List Handlers
+// GetLists retrieves all shopping lists accessible to the authenticated user.
 func (s *Server) GetLists(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 
@@ -152,6 +157,7 @@ func (s *Server) GetLists(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(lists)
 }
 
+// CreateList creates a new shopping list for the authenticated user.
 func (s *Server) CreateList(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 
@@ -179,6 +185,7 @@ func (s *Server) CreateList(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(list)
 }
 
+// GetList retrieves a specific shopping list by ID.
 func (s *Server) GetList(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	listID := c.Params("id")
@@ -193,6 +200,7 @@ func (s *Server) GetList(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(list)
 }
 
+// UpdateList updates a shopping list's name if the user is the owner.
 func (s *Server) UpdateList(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	listID := c.Params("id")
@@ -221,6 +229,7 @@ func (s *Server) UpdateList(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(list)
 }
 
+// DeleteList deletes a shopping list if the user is the owner.
 func (s *Server) DeleteList(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	listID := c.Params("id")
@@ -235,6 +244,7 @@ func (s *Server) DeleteList(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
+// GetListMembers retrieves all members of a shopping list.
 func (s *Server) GetListMembers(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	listID := c.Params("id")
@@ -249,6 +259,7 @@ func (s *Server) GetListMembers(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(members)
 }
 
+// RemoveListMember removes a member from a shopping list.
 func (s *Server) RemoveListMember(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	listID := c.Params("id")
@@ -264,7 +275,7 @@ func (s *Server) RemoveListMember(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// List Item Handlers
+// GetListItems retrieves all items from a shopping list.
 func (s *Server) GetListItems(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	listID := c.Params("id")
@@ -287,6 +298,7 @@ func (s *Server) GetListItems(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(items)
 }
 
+// CreateListItem creates a new item in a shopping list.
 func (s *Server) CreateListItem(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	listID := c.Params("id")
@@ -333,6 +345,7 @@ func (s *Server) CreateListItem(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(item)
 }
 
+// UpdateListItem updates an existing shopping list item.
 func (s *Server) UpdateListItem(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	listID := c.Params("id")
@@ -380,6 +393,7 @@ func (s *Server) UpdateListItem(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(item)
 }
 
+// ToggleListItem toggles the completion status of a shopping list item.
 func (s *Server) ToggleListItem(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	listID := c.Params("id")
@@ -409,6 +423,7 @@ func (s *Server) ToggleListItem(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(item)
 }
 
+// DeleteListItem removes an item from a shopping list.
 func (s *Server) DeleteListItem(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	listID := c.Params("id")
@@ -437,7 +452,7 @@ func (s *Server) DeleteListItem(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// Invitation Handlers
+// CreateInvitation creates a new invitation for server or list access.
 func (s *Server) CreateInvitation(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 
@@ -465,6 +480,7 @@ func (s *Server) CreateInvitation(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(invitation)
 }
 
+// GetInvitations retrieves all invitations created by the authenticated user.
 func (s *Server) GetInvitations(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 
@@ -478,6 +494,7 @@ func (s *Server) GetInvitations(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(invitations)
 }
 
+// RevokeInvitation cancels an invitation if the user is the original inviter.
 func (s *Server) RevokeInvitation(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	invitationID := c.Params("id")

@@ -5,10 +5,10 @@ package handlers
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -267,7 +267,11 @@ func createAuthenticatedRequest(t *testing.T, server *Server, method, url string
 	t.Helper()
 
 	// Create a test user with unique ID and email
-	randomID := fmt.Sprintf("%d", rand.Intn(1000000))
+	randomBytes := make([]byte, 4)
+	if _, err := rand.Read(randomBytes); err != nil {
+		t.Fatalf("Failed to generate random bytes: %v", err)
+	}
+	randomID := fmt.Sprintf("%x", randomBytes)
 	userID := "auth-user-" + randomID + "-" + strings.ReplaceAll(t.Name(), "/", "-")
 	email := "auth-" + randomID + "@example.com"
 	user := models.User{

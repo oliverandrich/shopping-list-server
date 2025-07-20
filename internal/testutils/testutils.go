@@ -1,6 +1,8 @@
 // Licensed under the EUPL-1.2-or-later
 // Copyright (C) 2025 Oliver Andrich
 
+// Package testutils provides common testing utilities including test configuration setup,
+// environment management, and shared test helpers.
 package testutils
 
 import (

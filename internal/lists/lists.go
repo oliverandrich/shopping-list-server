@@ -1,6 +1,8 @@
 // Licensed under the EUPL-1.2-or-later
 // Copyright (C) 2025 Oliver Andrich
 
+// Package lists provides shopping list management services including CRUD operations,
+// membership management, and permission control.
 package lists
 
 import (
@@ -13,14 +15,17 @@ import (
 	"gorm.io/gorm"
 )
 
+// Service provides shopping list management operations including CRUD and membership management.
 type Service struct {
 	DB *gorm.DB
 }
 
+// NewService creates a new lists service with database access.
 func NewService(db *gorm.DB) *Service {
 	return &Service{DB: db}
 }
 
+// GetUserLists retrieves all shopping lists accessible to the given user.
 func (s *Service) GetUserLists(userID string) ([]models.ShoppingList, error) {
 	var lists []models.ShoppingList
 	err := s.DB.Joins("JOIN list_members ON shopping_lists.id = list_members.list_id").
@@ -31,6 +36,7 @@ func (s *Service) GetUserLists(userID string) ([]models.ShoppingList, error) {
 	return lists, err
 }
 
+// GetListByID retrieves a specific shopping list if the user has access to it.
 func (s *Service) GetListByID(listID, userID string) (*models.ShoppingList, error) {
 	var list models.ShoppingList
 	err := s.DB.Joins("JOIN list_members ON shopping_lists.id = list_members.list_id").
@@ -43,6 +49,7 @@ func (s *Service) GetListByID(listID, userID string) (*models.ShoppingList, erro
 	return &list, nil
 }
 
+// CreateList creates a new shopping list with the user as owner and adds them as a member.
 func (s *Service) CreateList(userID, name string) (*models.ShoppingList, error) {
 	// Validate inputs
 	if strings.TrimSpace(userID) == "" {
@@ -88,6 +95,7 @@ func (s *Service) CreateList(userID, name string) (*models.ShoppingList, error) 
 	return &list, nil
 }
 
+// UpdateList updates a shopping list's name if the user is the owner.
 func (s *Service) UpdateList(listID, userID, name string) (*models.ShoppingList, error) {
 	// Validate inputs
 	if strings.TrimSpace(listID) == "" {
@@ -121,6 +129,7 @@ func (s *Service) UpdateList(listID, userID, name string) (*models.ShoppingList,
 	return &list, nil
 }
 
+// DeleteList deletes a shopping list if the user is the owner.
 func (s *Service) DeleteList(listID, userID string) error {
 	// Validate inputs
 	if strings.TrimSpace(listID) == "" {
@@ -153,6 +162,7 @@ func (s *Service) DeleteList(listID, userID string) error {
 	return nil
 }
 
+// GetListMembers retrieves all members of a shopping list if the user has access.
 func (s *Service) GetListMembers(listID, userID string) ([]models.User, error) {
 	// Validate inputs
 	if strings.TrimSpace(listID) == "" {
@@ -174,6 +184,7 @@ func (s *Service) GetListMembers(listID, userID string) ([]models.User, error) {
 	return users, err
 }
 
+// AddMemberToList adds a new member to a shopping list if the user is the owner.
 func (s *Service) AddMemberToList(listID, userID, newMemberID string) error {
 	// Validate inputs
 	if strings.TrimSpace(listID) == "" {
@@ -209,6 +220,7 @@ func (s *Service) AddMemberToList(listID, userID, newMemberID string) error {
 	return s.DB.Create(&member).Error
 }
 
+// RemoveMemberFromList removes a member from a shopping list if the user is the owner.
 func (s *Service) RemoveMemberFromList(listID, userID, memberID string) error {
 	// Validate inputs
 	if strings.TrimSpace(listID) == "" {
@@ -246,18 +258,21 @@ func (s *Service) RemoveMemberFromList(listID, userID, memberID string) error {
 	return nil
 }
 
+// IsListOwner checks if the given user is the owner of the specified list.
 func (s *Service) IsListOwner(listID, userID string) bool {
 	var member models.ListMember
 	err := s.DB.Where("list_id = ? AND user_id = ? AND role = ?", listID, userID, "owner").First(&member).Error
 	return err == nil
 }
 
+// HasListAccess checks if the given user has access to the specified list.
 func (s *Service) HasListAccess(listID, userID string) bool {
 	var member models.ListMember
 	err := s.DB.Where("list_id = ? AND user_id = ?", listID, userID).First(&member).Error
 	return err == nil
 }
 
+// CreateDefaultListForUser creates a default shopping list for a new user.
 func (s *Service) CreateDefaultListForUser(userID string) (*models.ShoppingList, error) {
 	return s.CreateList(userID, "My Shopping List")
 }

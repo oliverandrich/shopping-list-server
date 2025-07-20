@@ -1,6 +1,7 @@
 // Licensed under the EUPL-1.2-or-later
 // Copyright (C) 2025 Oliver Andrich
 
+// Package invitations provides invitation management services for user onboarding and list sharing.
 package invitations
 
 import (
@@ -17,11 +18,13 @@ import (
 	"gorm.io/gorm"
 )
 
+// Service provides invitation management including creation, sending, and acceptance.
 type Service struct {
 	DB     *gorm.DB
 	Mailer *gomail.Dialer
 }
 
+// NewService creates a new invitations service with database and email capabilities.
 func NewService(db *gorm.DB, mailer *gomail.Dialer) *Service {
 	return &Service{
 		DB:     db,
@@ -29,6 +32,7 @@ func NewService(db *gorm.DB, mailer *gomail.Dialer) *Service {
 	}
 }
 
+// GenerateInvitationCode generates a secure 8-character hexadecimal invitation code.
 func GenerateInvitationCode() string {
 	bytes := make([]byte, 4)
 	if _, err := rand.Read(bytes); err != nil {
@@ -38,6 +42,7 @@ func GenerateInvitationCode() string {
 	return fmt.Sprintf("%X", bytes)
 }
 
+// CreateInvitation creates a new invitation for server or list access.
 func (s *Service) CreateInvitation(inviterID, email, invType string, listID *string) (*models.Invitation, error) {
 	// Validate invitation type
 	if invType != "server" && invType != "list" {
@@ -111,6 +116,7 @@ func (s *Service) CreateInvitation(inviterID, email, invType string, listID *str
 	return &invitation, nil
 }
 
+// SendInvitationEmail sends an invitation email to the specified recipient.
 func (s *Service) SendInvitationEmail(invitation *models.Invitation) error {
 	var inviterEmail string
 	s.DB.Model(&models.User{}).Select("email").Where("id = ?", invitation.InvitedBy).Scan(&inviterEmail)
@@ -153,6 +159,7 @@ To accept this invitation, use the code when logging in.
 	return s.Mailer.DialAndSend(m)
 }
 
+// AcceptInvitation marks an invitation as used and returns it if valid.
 func (s *Service) AcceptInvitation(email, code string) (*models.Invitation, error) {
 	var invitation models.Invitation
 	err := s.DB.Where("email = ? AND code = ? AND used = false AND expires_at > ?",
@@ -168,12 +175,14 @@ func (s *Service) AcceptInvitation(email, code string) (*models.Invitation, erro
 	return &invitation, nil
 }
 
+// GetUserInvitations retrieves all invitations created by the specified user.
 func (s *Service) GetUserInvitations(userID string) ([]models.Invitation, error) {
 	var invitations []models.Invitation
 	err := s.DB.Where("invited_by = ?", userID).Order("created_at DESC").Find(&invitations).Error
 	return invitations, err
 }
 
+// RevokeInvitation cancels an invitation if the user is the original inviter.
 func (s *Service) RevokeInvitation(invitationID, userID string) error {
 	result := s.DB.Where("id = ? AND invited_by = ? AND used = false", invitationID, userID).Delete(&models.Invitation{})
 	if result.Error != nil {

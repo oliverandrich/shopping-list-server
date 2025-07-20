@@ -1,6 +1,8 @@
 // Licensed under the EUPL-1.2-or-later
 // Copyright (C) 2025 Oliver Andrich
 
+// Package auth provides authentication services including magic link generation, JWT token management,
+// and user verification for the shopping list application.
 package auth
 
 import (
@@ -19,12 +21,14 @@ import (
 	"gorm.io/gorm"
 )
 
+// Service provides authentication services including magic link generation and JWT management.
 type Service struct {
 	DB        *gorm.DB
 	JWTSecret []byte
 	Mailer    *gomail.Dialer
 }
 
+// NewService creates a new authentication service with database, JWT secret, and email mailer.
 func NewService(db *gorm.DB, jwtSecret []byte, mailer *gomail.Dialer) *Service {
 	return &Service{
 		DB:        db,
@@ -33,6 +37,7 @@ func NewService(db *gorm.DB, jwtSecret []byte, mailer *gomail.Dialer) *Service {
 	}
 }
 
+// GenerateCode generates a secure 6-digit numeric code for magic link authentication.
 func GenerateCode() string {
 	bytes := make([]byte, 3)
 	if _, err := rand.Read(bytes); err != nil {
@@ -42,6 +47,7 @@ func GenerateCode() string {
 	return fmt.Sprintf("%06d", int(bytes[0])<<16|int(bytes[1])<<8|int(bytes[2]))[:6]
 }
 
+// SendMagicLink sends a magic link code to the specified email address.
 func (s *Service) SendMagicLink(email, code string) error {
 	// Skip email sending in test environment
 	if os.Getenv("GO_ENV") == "test" {
@@ -66,6 +72,7 @@ If you didn't request this, please ignore this email.
 	return s.Mailer.DialAndSend(m)
 }
 
+// CreateMagicLink creates a new magic link for the given email and returns the code.
 func (s *Service) CreateMagicLink(email string) (string, error) {
 	code := GenerateCode()
 	expiresAt := time.Now().Add(15 * time.Minute)
@@ -87,6 +94,7 @@ func (s *Service) CreateMagicLink(email string) (string, error) {
 	return code, nil
 }
 
+// VerifyMagicLink verifies a magic link code and returns the associated user.
 func (s *Service) VerifyMagicLink(email, code string) (*models.User, error) {
 	var magicLink models.MagicLink
 	result := s.DB.Where("code = ? AND email = ? AND used = false AND expires_at > ?",
@@ -110,6 +118,7 @@ func (s *Service) VerifyMagicLink(email, code string) (*models.User, error) {
 	return &user, nil
 }
 
+// VerifyMagicLinkWithInvitation verifies a magic link and processes any pending invitations.
 func (s *Service) VerifyMagicLinkWithInvitation(email, code string) (*models.User, *models.Invitation, error) {
 	var magicLink models.MagicLink
 	result := s.DB.Where("code = ? AND email = ? AND used = false AND expires_at > ?",
@@ -160,6 +169,7 @@ func (s *Service) VerifyMagicLinkWithInvitation(email, code string) (*models.Use
 	return &user, &invitation, nil
 }
 
+// GenerateJWT creates a new JWT token for the given user with 30-day expiry.
 func (s *Service) GenerateJWT(user *models.User) (string, error) {
 	claims := &models.JWTClaims{
 		UserID: user.ID,
@@ -174,8 +184,9 @@ func (s *Service) GenerateJWT(user *models.User) (string, error) {
 	return token.SignedString(s.JWTSecret)
 }
 
+// ValidateJWT validates a JWT token and returns the claims if valid.
 func (s *Service) ValidateJWT(tokenString string) (*models.JWTClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &models.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &models.JWTClaims{}, func(_ *jwt.Token) (interface{}, error) {
 		return s.JWTSecret, nil
 	})
 
@@ -191,6 +202,7 @@ func (s *Service) ValidateJWT(tokenString string) (*models.JWTClaims, error) {
 	return claims, nil
 }
 
+// JWTMiddleware returns a Fiber middleware that validates JWT tokens in requests.
 func (s *Service) JWTMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
