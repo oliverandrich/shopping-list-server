@@ -37,6 +37,11 @@ func GenerateCode() string {
 }
 
 func (s *Service) SendMagicLink(email, code string) error {
+	// Skip email sending in test environment
+	if os.Getenv("GO_ENV") == "test" {
+		return nil
+	}
+
 	m := gomail.NewMessage()
 	m.SetHeader("From", os.Getenv("SMTP_FROM"))
 	m.SetHeader("To", email)

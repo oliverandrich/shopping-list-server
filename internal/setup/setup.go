@@ -110,9 +110,9 @@ func (s *Service) MigrateExistingData() error {
 		return nil // Already migrated
 	}
 
-	// Get the first user as the initial admin
+	// Get the oldest user (by joined_at) as the initial admin
 	var firstUser models.User
-	if err := s.DB.First(&firstUser).Error; err != nil {
+	if err := s.DB.Order("joined_at ASC").First(&firstUser).Error; err != nil {
 		return err
 	}
 
@@ -148,12 +148,8 @@ func (s *Service) MigrateExistingData() error {
 			return err
 		}
 
-		// Update existing items to belong to this list
-		if err := s.DB.Model(&models.ShoppingItem{}).
-			Where("user_id = ?", user.ID).
-			Update("list_id", defaultList.ID).Error; err != nil {
-			return err
-		}
+		// Skip updating existing items as the ShoppingItem model doesn't have user_id field anymore
+		// Items are now associated with lists directly
 	}
 
 	// Mark system as setup

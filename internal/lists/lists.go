@@ -2,6 +2,7 @@ package lists
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,9 +41,23 @@ func (s *Service) GetListByID(listID, userID string) (*models.ShoppingList, erro
 }
 
 func (s *Service) CreateList(userID, name string) (*models.ShoppingList, error) {
+	// Validate inputs
+	if strings.TrimSpace(userID) == "" {
+		return nil, errors.New("user ID cannot be empty")
+	}
+	if strings.TrimSpace(name) == "" {
+		return nil, errors.New("list name cannot be empty")
+	}
+
+	// Verify user exists
+	var user models.User
+	if err := s.DB.First(&user, "id = ?", userID).Error; err != nil {
+		return nil, errors.New("user not found")
+	}
+
 	list := models.ShoppingList{
 		ID:        uuid.New().String(),
-		Name:      name,
+		Name:      strings.TrimSpace(name),
 		OwnerID:   userID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -71,6 +86,17 @@ func (s *Service) CreateList(userID, name string) (*models.ShoppingList, error) 
 }
 
 func (s *Service) UpdateList(listID, userID, name string) (*models.ShoppingList, error) {
+	// Validate inputs
+	if strings.TrimSpace(listID) == "" {
+		return nil, errors.New("list ID cannot be empty")
+	}
+	if strings.TrimSpace(userID) == "" {
+		return nil, errors.New("user ID cannot be empty")
+	}
+	if strings.TrimSpace(name) == "" {
+		return nil, errors.New("list name cannot be empty")
+	}
+
 	// Check if user is owner
 	if !s.IsListOwner(listID, userID) {
 		return nil, errors.New("only list owners can update lists")
@@ -81,7 +107,7 @@ func (s *Service) UpdateList(listID, userID, name string) (*models.ShoppingList,
 		return nil, errors.New("list not found")
 	}
 
-	list.Name = name
+	list.Name = strings.TrimSpace(name)
 	list.UpdatedAt = time.Now()
 
 	if err := s.DB.Save(&list).Error; err != nil {
@@ -93,6 +119,14 @@ func (s *Service) UpdateList(listID, userID, name string) (*models.ShoppingList,
 }
 
 func (s *Service) DeleteList(listID, userID string) error {
+	// Validate inputs
+	if strings.TrimSpace(listID) == "" {
+		return errors.New("list ID cannot be empty")
+	}
+	if strings.TrimSpace(userID) == "" {
+		return errors.New("user ID cannot be empty")
+	}
+
 	// Check if user is owner
 	if !s.IsListOwner(listID, userID) {
 		return errors.New("only list owners can delete lists")
@@ -117,6 +151,14 @@ func (s *Service) DeleteList(listID, userID string) error {
 }
 
 func (s *Service) GetListMembers(listID, userID string) ([]models.User, error) {
+	// Validate inputs
+	if strings.TrimSpace(listID) == "" {
+		return nil, errors.New("list ID cannot be empty")
+	}
+	if strings.TrimSpace(userID) == "" {
+		return nil, errors.New("user ID cannot be empty")
+	}
+
 	// Check if user has access to this list
 	if !s.HasListAccess(listID, userID) {
 		return nil, errors.New("access denied")
@@ -130,6 +172,17 @@ func (s *Service) GetListMembers(listID, userID string) ([]models.User, error) {
 }
 
 func (s *Service) AddMemberToList(listID, userID, newMemberID string) error {
+	// Validate inputs
+	if strings.TrimSpace(listID) == "" {
+		return errors.New("list ID cannot be empty")
+	}
+	if strings.TrimSpace(userID) == "" {
+		return errors.New("user ID cannot be empty")
+	}
+	if strings.TrimSpace(newMemberID) == "" {
+		return errors.New("new member ID cannot be empty")
+	}
+
 	// Check if user is owner
 	if !s.IsListOwner(listID, userID) {
 		return errors.New("only list owners can add members")
@@ -154,6 +207,17 @@ func (s *Service) AddMemberToList(listID, userID, newMemberID string) error {
 }
 
 func (s *Service) RemoveMemberFromList(listID, userID, memberID string) error {
+	// Validate inputs
+	if strings.TrimSpace(listID) == "" {
+		return errors.New("list ID cannot be empty")
+	}
+	if strings.TrimSpace(userID) == "" {
+		return errors.New("user ID cannot be empty")
+	}
+	if strings.TrimSpace(memberID) == "" {
+		return errors.New("member ID cannot be empty")
+	}
+
 	// Check if user is owner or removing themselves
 	if !s.IsListOwner(listID, userID) && userID != memberID {
 		return errors.New("access denied")

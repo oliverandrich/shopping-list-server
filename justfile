@@ -43,17 +43,33 @@ vet:
 test:
     go test ./...
 
+# Run tests with coverage
+test-coverage:
+    go test -cover ./...
+
+# Run tests with detailed coverage report
+test-coverage-html:
+    go test -coverprofile=coverage.out ./...
+    go tool cover -html=coverage.out -o coverage.html
+    @echo "Coverage report generated: coverage.html"
+
+# Run tests with coverage and show percentage
+test-coverage-func:
+    go test -coverprofile=coverage.out ./...
+    go tool cover -func=coverage.out
+
 # Clean build artifacts
 clean:
     rm -f shopping-list-server
+    rm -f coverage.out coverage.html
     go clean
 
 # Check code quality (format, vet, build)
 check: fmt vet build
     @echo "✅ Code quality checks passed"
 
-# Full maintenance: deps, check, test
-maintenance: deps check test
+# Full maintenance: deps, check, test with coverage
+maintenance: deps check test-coverage
     @echo "✅ Full maintenance completed"
 
 # Show project information
