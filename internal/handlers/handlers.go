@@ -10,6 +10,7 @@ import (
 	"github.com/oliverandrich/shopping-list-server/internal/invitations"
 	"github.com/oliverandrich/shopping-list-server/internal/lists"
 	"github.com/oliverandrich/shopping-list-server/internal/models"
+	"github.com/oliverandrich/shopping-list-server/internal/validation"
 	"gopkg.in/gomail.v2"
 	"gorm.io/gorm"
 )
@@ -47,6 +48,13 @@ func (s *Server) RequestLogin(c *fiber.Ctx) error {
 		})
 	}
 
+	if err := validation.ValidateStruct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Validation failed",
+			"details": validation.FormatValidationErrors(err),
+		})
+	}
+
 	code, err := s.Auth.CreateMagicLink(req.Email)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -70,6 +78,13 @@ func (s *Server) VerifyLogin(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
+		})
+	}
+
+	if err := validation.ValidateStruct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Validation failed",
+			"details": validation.FormatValidationErrors(err),
 		})
 	}
 
@@ -147,6 +162,13 @@ func (s *Server) CreateList(c *fiber.Ctx) error {
 		})
 	}
 
+	if err := validation.ValidateStruct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Validation failed",
+			"details": validation.FormatValidationErrors(err),
+		})
+	}
+
 	list, err := s.Lists.CreateList(userID, req.Name)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -179,6 +201,13 @@ func (s *Server) UpdateList(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
+		})
+	}
+
+	if err := validation.ValidateStruct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Validation failed",
+			"details": validation.FormatValidationErrors(err),
 		})
 	}
 
@@ -276,6 +305,13 @@ func (s *Server) CreateListItem(c *fiber.Ctx) error {
 		})
 	}
 
+	if err := validation.ValidateStruct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Validation failed",
+			"details": validation.FormatValidationErrors(err),
+		})
+	}
+
 	if req.Tags == "" {
 		req.Tags = "[]"
 	}
@@ -320,6 +356,13 @@ func (s *Server) UpdateListItem(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
+		})
+	}
+
+	if err := validation.ValidateStruct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Validation failed",
+			"details": validation.FormatValidationErrors(err),
 		})
 	}
 
@@ -402,6 +445,13 @@ func (s *Server) CreateInvitation(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
+		})
+	}
+
+	if err := validation.ValidateStruct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Validation failed",
+			"details": validation.FormatValidationErrors(err),
 		})
 	}
 

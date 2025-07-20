@@ -65,7 +65,7 @@ func TestInit_FileDatabase(t *testing.T) {
 func TestInit_InvalidPath(t *testing.T) {
 	// Try to create a database in a non-existent directory without proper permissions
 	invalidPath := "/nonexistent/directory/test.db"
-	
+
 	_, err := Init(invalidPath)
 	if err == nil {
 		t.Error("Expected error when initializing database with invalid path, got nil")
@@ -111,7 +111,7 @@ func TestInit_AutoMigration(t *testing.T) {
 	// Check that tables were created by auto-migration
 	tables := []string{
 		"system_settings",
-		"users", 
+		"users",
 		"shopping_lists",
 		"list_members",
 		"invitations",
@@ -126,7 +126,7 @@ func TestInit_AutoMigration(t *testing.T) {
 			t.Errorf("Failed to check for table %s: %v", table, err)
 			continue
 		}
-		
+
 		if count == 0 {
 			t.Errorf("Table %s was not created by auto-migration", table)
 		}
@@ -152,7 +152,7 @@ func TestInit_MultipleConnections(t *testing.T) {
 
 	// Test that they are independent (different memory databases)
 	var result1, result2 int
-	
+
 	// Create a test table in first database
 	err = db1.Exec("CREATE TABLE test_table (id INTEGER PRIMARY KEY, value TEXT)").Error
 	if err != nil {

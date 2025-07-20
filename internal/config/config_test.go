@@ -11,16 +11,16 @@ import (
 func TestLoad(t *testing.T) {
 	// Save original environment
 	originalEnv := map[string]string{
-		"SMTP_HOST": os.Getenv("SMTP_HOST"),
-		"SMTP_PORT": os.Getenv("SMTP_PORT"),
-		"SMTP_USER": os.Getenv("SMTP_USER"),
-		"SMTP_PASS": os.Getenv("SMTP_PASS"),
-		"SMTP_FROM": os.Getenv("SMTP_FROM"),
+		"SMTP_HOST":  os.Getenv("SMTP_HOST"),
+		"SMTP_PORT":  os.Getenv("SMTP_PORT"),
+		"SMTP_USER":  os.Getenv("SMTP_USER"),
+		"SMTP_PASS":  os.Getenv("SMTP_PASS"),
+		"SMTP_FROM":  os.Getenv("SMTP_FROM"),
 		"JWT_SECRET": os.Getenv("JWT_SECRET"),
-		"PORT": os.Getenv("PORT"),
-		"DB_PATH": os.Getenv("DB_PATH"),
+		"PORT":       os.Getenv("PORT"),
+		"DB_PATH":    os.Getenv("DB_PATH"),
 	}
-	
+
 	// Clean up environment
 	defer func() {
 		for key, value := range originalEnv {
@@ -98,9 +98,9 @@ func TestLoad(t *testing.T) {
 
 	t.Run("with invalid SMTP_PORT", func(t *testing.T) {
 		os.Setenv("SMTP_PORT", "invalid")
-		
+
 		cfg := Load()
-		
+
 		// Should fall back to default
 		if cfg.SMTPPort != 587 {
 			t.Errorf("Expected SMTPPort to fallback to 587 with invalid value, got %d", cfg.SMTPPort)
@@ -136,11 +136,11 @@ func TestGetEnvOrDefault(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Clean up
 			defer os.Unsetenv(tt.key)
-			
+
 			if tt.envValue != "" {
 				os.Setenv(tt.key, tt.envValue)
 			}
-			
+
 			result := getEnvOrDefault(tt.key, tt.defaultValue)
 			if result != tt.expected {
 				t.Errorf("getEnvOrDefault() = %v, want %v", result, tt.expected)
@@ -184,11 +184,11 @@ func TestGetEnvAsIntOrDefault(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Clean up
 			defer os.Unsetenv(tt.key)
-			
+
 			if tt.envValue != "" {
 				os.Setenv(tt.key, tt.envValue)
 			}
-			
+
 			result := getEnvAsIntOrDefault(tt.key, tt.defaultValue)
 			if result != tt.expected {
 				t.Errorf("getEnvAsIntOrDefault() = %v, want %v", result, tt.expected)
@@ -229,18 +229,18 @@ func TestConfigStruct(t *testing.T) {
 func TestJWTSecretGeneration(t *testing.T) {
 	// Test that JWT secret is generated when not provided
 	os.Unsetenv("JWT_SECRET")
-	
+
 	cfg1 := Load()
 	cfg2 := Load()
-	
+
 	if len(cfg1.JWTSecret) == 0 {
 		t.Error("JWTSecret should be generated when not provided")
 	}
-	
+
 	if len(cfg2.JWTSecret) == 0 {
 		t.Error("JWTSecret should be generated when not provided")
 	}
-	
+
 	// Note: Secrets might be the same if generated deterministically
 	// This is acceptable for config loading consistency
 	t.Logf("Generated JWT secrets - cfg1: %d bytes, cfg2: %d bytes", len(cfg1.JWTSecret), len(cfg2.JWTSecret))
@@ -272,11 +272,11 @@ func TestPortFormatting(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			defer os.Unsetenv("PORT")
-			
+
 			if tt.envValue != "" {
 				os.Setenv("PORT", tt.envValue)
 			}
-			
+
 			cfg := Load()
 			if cfg.ServerPort != tt.expected {
 				t.Errorf("Expected ServerPort to be '%s', got '%s'", tt.expected, cfg.ServerPort)
