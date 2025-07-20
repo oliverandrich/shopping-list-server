@@ -16,6 +16,35 @@ This is a Go-based REST API server for a shopping list application with password
 
 ## Common Development Commands
 
+The project includes a `justfile` for easy task management. Run `just` to see all available commands.
+
+### Using Just (Recommended)
+```bash
+# Show all available commands
+just
+
+# Project setup and maintenance
+just deps          # Install dependencies
+just setup          # Initial setup (creates admin user)
+just build          # Build the application
+just run            # Run the server
+just dev            # Development server with auto-restart (requires air)
+
+# Code quality
+just fmt            # Format Go code
+just vet            # Vet code for issues  
+just check          # Run fmt, vet, and build
+just test           # Run tests
+just maintenance    # Full maintenance cycle
+
+# Utilities
+just clean          # Clean build artifacts
+just info           # Show project information
+just audit          # Security audit (requires govulncheck)
+just update         # Update dependencies
+```
+
+### Direct Go Commands
 ```bash
 # Download dependencies
 go mod download
