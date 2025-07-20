@@ -52,12 +52,32 @@ The application requires these environment variables:
 
 ## Architecture
 
-The entire application is contained in a single `main.go` file (459 lines) with the following structure:
+The application follows a clean, modular structure organized into packages:
 
-### Data Models (lines 34-54)
-- `User` - Basic user model with email authentication
-- `MagicLink` - Temporary authentication codes (15-minute expiry)
-- `ShoppingItem` - Shopping list items with tags support
+```
+shopping-list-server/
+├── main.go                    # Entry point, server setup
+└── internal/
+    ├── models/               # Data models and DTOs
+    │   └── models.go
+    ├── handlers/             # HTTP request handlers
+    │   └── handlers.go
+    ├── auth/                 # Authentication logic
+    │   └── auth.go
+    ├── db/                   # Database initialization
+    │   └── db.go
+    └── config/               # Configuration management
+        └── config.go
+```
+
+### Package Overview
+
+- **models** - All data structures (User, MagicLink, ShoppingItem, DTOs)
+- **handlers** - HTTP handlers for all endpoints
+- **auth** - JWT generation/validation, magic link logic, middleware
+- **db** - Database connection and auto-migration
+- **config** - Environment variable management
+- **main** - Server initialization and route setup
 
 ### API Endpoints
 
@@ -72,13 +92,6 @@ The entire application is contained in a single `main.go` file (459 lines) with 
 - `PUT /api/v1/items/:id` - Update item
 - `POST /api/v1/items/:id/toggle` - Toggle item completion
 - `DELETE /api/v1/items/:id` - Delete item
-
-### Key Functions
-- `main()` (lines 56-102) - Server initialization and route setup
-- `initDB()` (lines 104-113) - Database setup with auto-migration
-- `jwtMiddleware()` (lines 115-146) - JWT authentication middleware
-- Authentication handlers (lines 148-223) - Magic link flow
-- Shopping item handlers (lines 225-403) - CRUD operations
 
 ## Database
 
@@ -96,10 +109,11 @@ The entire application is contained in a single `main.go` file (459 lines) with 
 
 ## Development Notes
 
-- Server runs on port 3000
+- Server runs on port 3000 (configurable via PORT env var)
 - CORS is enabled for all origins
 - No test files currently exist
-- All code is in a single file - consider refactoring into packages for larger features
+- Code is organized into internal packages for maintainability
+- Uses standard Go project layout with internal packages
 - Basic error handling - enhance with proper logging for production
 
 ## Commit Message Convention
