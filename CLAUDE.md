@@ -9,7 +9,7 @@ This is a Go-based REST API server for a shopping list application with password
 ## Technology Stack
 
 - **Language**: Go 1.24.5
-- **Web Framework**: Echo v4
+- **Web Framework**: Fiber v2
 - **Database**: SQLite with GORM ORM
 - **Authentication**: JWT tokens with magic link email authentication
 - **Email**: gomail.v2 for SMTP

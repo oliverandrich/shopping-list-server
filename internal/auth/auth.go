@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/oliverandrich/shopping-list-server/internal/models"
 	"gopkg.in/gomail.v2"
 	"gorm.io/gorm"
@@ -180,29 +180,33 @@ func (s *Service) ValidateJWT(tokenString string) (*models.JWTClaims, error) {
 	return claims, nil
 }
 
-func (s *Service) JWTMiddleware() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			authHeader := c.Request().Header.Get("Authorization")
-			if authHeader == "" {
-				return echo.NewHTTPError(401, "Missing authorization header")
-			}
-
-			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-			if tokenString == authHeader {
-				return echo.NewHTTPError(401, "Invalid authorization format")
-			}
-
-			claims, err := s.ValidateJWT(tokenString)
-			if err != nil {
-				return echo.NewHTTPError(401, "Invalid token")
-			}
-
-			// Add user info to context
-			c.Set("user_id", claims.UserID)
-			c.Set("user_email", claims.Email)
-
-			return next(c)
+func (s *Service) JWTMiddleware() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		authHeader := c.Get("Authorization")
+		if authHeader == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Missing authorization header",
+			})
 		}
+
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		if tokenString == authHeader {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid authorization format",
+			})
+		}
+
+		claims, err := s.ValidateJWT(tokenString)
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid token",
+			})
+		}
+
+		// Add user info to context
+		c.Locals("user_id", claims.UserID)
+		c.Locals("user_email", claims.Email)
+
+		return c.Next()
 	}
 }

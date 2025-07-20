@@ -7,8 +7,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/oliverandrich/shopping-list-server/internal/config"
 	"github.com/oliverandrich/shopping-list-server/internal/db"
 	"github.com/oliverandrich/shopping-list-server/internal/handlers"
@@ -63,20 +65,26 @@ func main() {
 	// Initialize server with handlers
 	server := handlers.NewServer(database, cfg.JWTSecret, mailer)
 
-	// Initialize Echo
-	e := echo.New()
+	// Initialize Fiber
+	app := fiber.New(fiber.Config{
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		},
+	})
 
 	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
+	app.Use(logger.New())
+	app.Use(recover.New())
+	app.Use(cors.New())
 
 	// Routes
-	setupRoutes(e, server)
+	setupRoutes(app, server)
 
 	// Start server
 	log.Printf("Starting server on %s", cfg.ServerPort)
-	if err := e.Start(cfg.ServerPort); err != nil {
+	if err := app.Listen(cfg.ServerPort); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
 }
@@ -131,37 +139,36 @@ func runSetup() {
 	fmt.Printf("You can now start the server with: shopping-list-server\n")
 }
 
-func setupRoutes(e *echo.Echo, server *handlers.Server) {
+func setupRoutes(app *fiber.App, server *handlers.Server) {
 	// API v1 group
-	api := e.Group("/api/v1")
+	api := app.Group("/api/v1")
 
 	// Public routes
-	api.GET("/health", server.Health)
-	api.POST("/auth/login", server.RequestLogin)
-	api.POST("/auth/verify", server.VerifyLogin)
+	api.Get("/health", server.Health)
+	api.Post("/auth/login", server.RequestLogin)
+	api.Post("/auth/verify", server.VerifyLogin)
 
 	// Protected routes
-	protected := api.Group("")
-	protected.Use(server.Auth.JWTMiddleware())
+	protected := api.Group("", server.Auth.JWTMiddleware())
 
 	// Lists
-	protected.GET("/lists", server.GetLists)
-	protected.POST("/lists", server.CreateList)
-	protected.GET("/lists/:id", server.GetList)
-	protected.PUT("/lists/:id", server.UpdateList)
-	protected.DELETE("/lists/:id", server.DeleteList)
-	protected.GET("/lists/:id/members", server.GetListMembers)
-	protected.DELETE("/lists/:id/members/:userId", server.RemoveListMember)
+	protected.Get("/lists", server.GetLists)
+	protected.Post("/lists", server.CreateList)
+	protected.Get("/lists/:id", server.GetList)
+	protected.Put("/lists/:id", server.UpdateList)
+	protected.Delete("/lists/:id", server.DeleteList)
+	protected.Get("/lists/:id/members", server.GetListMembers)
+	protected.Delete("/lists/:id/members/:userId", server.RemoveListMember)
 
 	// List Items
-	protected.GET("/lists/:id/items", server.GetListItems)
-	protected.POST("/lists/:id/items", server.CreateListItem)
-	protected.PUT("/lists/:id/items/:itemId", server.UpdateListItem)
-	protected.POST("/lists/:id/items/:itemId/toggle", server.ToggleListItem)
-	protected.DELETE("/lists/:id/items/:itemId", server.DeleteListItem)
+	protected.Get("/lists/:id/items", server.GetListItems)
+	protected.Post("/lists/:id/items", server.CreateListItem)
+	protected.Put("/lists/:id/items/:itemId", server.UpdateListItem)
+	protected.Post("/lists/:id/items/:itemId/toggle", server.ToggleListItem)
+	protected.Delete("/lists/:id/items/:itemId", server.DeleteListItem)
 
 	// Invitations
-	protected.POST("/invitations", server.CreateInvitation)
-	protected.GET("/invitations", server.GetInvitations)
-	protected.DELETE("/invitations/:id", server.RevokeInvitation)
+	protected.Post("/invitations", server.CreateInvitation)
+	protected.Get("/invitations", server.GetInvitations)
+	protected.Delete("/invitations/:id", server.RevokeInvitation)
 }
